@@ -1,0 +1,196 @@
+Sub VBAProjectSingle()
+  Dim Ticker As String
+  Dim Volume As Double
+  Dim Min_Date As Date
+  Dim Max_Date As Date
+  Dim BegPrice As Double
+  Dim EndPrice As Double
+  Dim PrChange As Double
+  Dim PrChangePerc As Double
+  Dim Summary_Table_Row As Double
+  Dim SummaryTableRow As Double
+  Dim LastRowSum As Integer
+  Dim PercMax As Range
+  Dim PercMaxVal As Double
+  Dim PercMin As Range
+  Dim PercMinVal As Double
+  Dim VolMax As Range
+  Dim VolMaxVal As Double
+  
+  'Stop Application Alerts
+    Application.DisplayAlerts = False
+    
+    'Delete Combined_Ticker worksheet
+     Sheets("Combined_Ticker").Delete
+    
+    'Re-enable Application alerts
+     Application.DisplayAlerts = True
+
+    ' Add a sheet named "Combined Ticker"
+    Sheets.Add.Name = "Combined_Ticker"
+
+    'move created sheet to be first sheet
+    Sheets("Combined_Ticker").Move Before:=Sheets(1)
+
+    ' Specify the location of the combined sheet
+    Set combined_sheet = Worksheets("Combined_Ticker")
+
+    ' Loop through all sheets
+    For Each ws In Worksheets
+
+        ' Find the last row of the combined sheet after each paste
+        ' Add 1 to get first empty row
+        LastRow = combined_sheet.Cells(Rows.Count, "A").End(xlUp).Row + 1
+
+        ' Find the last row of each worksheet
+        ' Subtract one to return the number of rows without header
+        lastRowState = ws.Cells(Rows.Count, "A").End(xlUp).Row - 1
+
+        ' Copy the contents of each state sheet into the combined sheet
+        combined_sheet.Range("A" & LastRow & ":G" & ((lastRowState - 1) + LastRow)).Value = ws.Range("A2:G" & (lastRowState + 1)).Value
+
+    Next ws
+
+    ' Copy the headers from sheet 1
+    combined_sheet.Range("A1:G1").Value = Sheets(2).Range("A1:G1").Value
+    
+    ' Autofit to display data
+      combined_sheet.Columns("A:G").AutoFit
+
+      Set Combined_Ticker = ThisWorkbook.Sheets("Combined_Ticker")
+
+      Combined_Ticker.Activate
+ 
+
+  ' Set an initial variable for holding the total volume per ticker symbol
+  
+  ' Determine the Last Row of Combined_Ticker
+        LastRow = Combined_Ticker.Cells(Rows.Count, 1).End(xlUp).Row
+
+  ' Determine the Last Column Number
+        LastColumn = Combined_Ticker.Cells(1, Columns.Count).End(xlToLeft).Column
+        
+   ' Print the Ticker Symbol in the Summary Table
+      Range("J1").Value = "Ticker"
+      
+      ' Print the Year Opening price for Ticker Symbol in the Summary Table
+        Range("K1").Value = "Year Open Price"
+      
+      ' Print the Year End price for Ticker Symbol in the Summary Table
+      Range("L1").Value = "Year End Price"
+      
+      ' Print the Year End price change for Ticker Symbol in the Summary Table
+      Range("M1").Value = "Price Change"
+      
+      ' Print the Year End price change for Ticker Symbol in the Summary Table
+      Range("N1").Value = "Price Change %"
+
+      ' Print the Ticker volume header to the Summary Table
+      Range("O1").Value = "Total Volume"
+
+  ' Keep track of the location for each credit card brand in the summary table
+    Summary_Table_Row = 2
+
+  ' Loop through all all ticker data
+  For i = 2 To LastRow
+
+    ' Check if we are still within the same Ticker Symbol, if it is not...
+    If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+       
+      ' Set the Ticker
+      Ticker = Cells(i, 1).Value
+
+      ' Add to the Ticker Total
+      Volume = Volume + Cells(i, 7).Value
+      
+      ' Set year end Price
+        EndPrice = Cells(i, 6).Value
+
+      ' Print the Ticker Symbol in the Summary Table
+      Range("J" & Summary_Table_Row).Value = Ticker
+      
+      ' Print the Year Opening price for Ticker Symbol in the Summary Table
+        Range("K" & Summary_Table_Row).Value = BegPrice
+      
+      ' Print the Year End price in the Summary Table
+      Range("L" & Summary_Table_Row).Value = EndPrice
+
+      ' Print the Ticker volume to the Summary Table
+      Range("O" & Summary_Table_Row).Value = Volume
+      
+      'Calculate Price Change variables with formatting
+      PrChange = Range("L" & Summary_Table_Row).Value - Range("K" & Summary_Table_Row).Value
+      Range("M" & Summary_Table_Row).Value = PrChange
+      If PrChange > 0 Then
+         Range("M" & Summary_Table_Row).Interior.Color = vbGreen
+      Else
+          Range("M" & Summary_Table_Row).Interior.Color = vbRed
+      End If
+      
+      If Range("K" & Summary_Table_Row).Value = 0 Then
+       PrChangePerc = 0
+      Else
+        PrChangePerc = PrChange / Range("K" & Summary_Table_Row).Value
+      End If
+      Range("N" & Summary_Table_Row).Value = FormatPercent(PrChangePerc, 2)
+      
+      
+      ' Add one to the summary table row
+      Summary_Table_Row = Summary_Table_Row + 1
+      
+      ' Reset the Volume Total
+      Volume = 0
+     
+     ' If the cell immediately before a row is the same brand...
+    ElseIf Cells(i - 1, 1).Value <> Cells(i, 1).Value Then
+     ' Set beginning year end Price
+        BegPrice = Cells(i, 3).Value
+        
+      ' Print the Year Opening price for Ticker Symbol in the Summary Table
+        Range("K" & Summary_Table_Row).Value = BegPrice
+        
+        
+      ' If the cell immediately following a row is the same Ticker...
+    Else
+
+      ' Add to the Ticker annual volume
+      Volume = Volume + Cells(i, 7).Value
+            
+    End If
+    
+  Next i
+  ' Determine the Last Row of Combined_Ticker
+        LastRowSum = Combined_Ticker.Cells(Rows.Count, 10).End(xlUp).Row
+
+  ' Determine the Last Column Number
+        LastColumnSum = Combined_Ticker.Cells(1, Columns.Count).End(xlToLeft).Column
+  
+   
+  ' Autofit to display data
+      'Combined_Ticker.Columns("J:O").AutoFit
+      
+      'Print the Ticker Symbol
+      Range("R1").Value = "Ticker"
+        
+      Range("S1").Value = "Value"
+      Range("Q2").Value = "Greatest % Increase"
+      Range("Q3").Value = "Greatest % Decrease"
+      Range("Q4").Value = "Greatest Total Volume"
+      
+     Set PercMax = Worksheets("Combined_Ticker").Range("N2:N" & LastRowSum)
+     PercMaxVal = Application.WorksheetFunction.Max(PercMax)
+     Range("S2").Value = FormatPercent(PercMaxVal, 2)
+
+     Set PercMin = Worksheets("Combined_Ticker").Range("N2:N" & LastRowSum)
+     PercMinVal = Application.WorksheetFunction.Min(PercMin)
+     Range("S3").Value = FormatPercent(PercMinVal, 2)
+
+     Set VolMax = Worksheets("Combined_Ticker").Range("O2:O" & LastRowSum)
+     VolMaxVal = Application.WorksheetFunction.Max(VolMax)
+     Range("S4").Value = VolMaxVal
+     
+     ' Autofit to display data
+      Combined_Ticker.Columns("J:S").AutoFit
+
+End Sub
+
