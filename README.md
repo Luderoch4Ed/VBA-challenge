@@ -2,7 +2,7 @@
 
 The purpose of this project is to analyze stock market data into basic summaries and indicatorsusing Excel's built-in VBA language.
 
-https://github.com/Luderoch4Ed/VBA-challenge/blob/5458d67d25b2a502d1bd4b4b17c885062b87767c/Capture.PNG
+![Stock Market Image](Stock-Chart-2.jpg)
 
 ## Getting Started
 
